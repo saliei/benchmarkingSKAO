@@ -17,7 +17,7 @@ theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
 image_name = "v6.png"
-n_workers = 4
+n_workers = 2
 
 print("**v6**")
 print(f"n_workers: {n_workers}")
@@ -37,6 +37,7 @@ def plot_image(image):
     plt.imsave(image_name ,image)
 
 def sum_vis(grid, iu, iv, vis):
+    vis = np.swapaxes(vis, 1, -1)
     np.add.at(grid, (iu, iv), vis)
     return grid
 
@@ -45,12 +46,14 @@ def gridding_v7(uvwt, vist, freq, n_workers=4):
     uvw0 = uvwt[:,:,0]
     uvw1 = uvwt[:,:,1]
 
+    uvw0 = uvw0.expand_dims("new_axis", axis=1)
+    uvw1 = uvw1.expand_dims("new_axis", axis=1)
+    freq = np.expand_dims(freq, axis=1)
+
     iu = (theta * uvw0 * freq / c).round().astype(int)  # (512, 351, 256)
     iv = (theta * uvw1 * freq / c).round().astype(int)  # (512, 351, 256)
     iu_idx = iu + image_size // 2
     iv_idx = iv + image_size // 2
-
-    vist = np.swapaxes(vist, 1, -1) # (512, 256, 351)
 
     # split data into chunks to be processed by a thread
     def chunk_data(data, n_chunks):
