@@ -5,7 +5,7 @@ import numpy as np
 import xarray as xr
 import zarr as zr
 import matplotlib.pyplot as plt
-from numba import njit
+from numba import njit, prange
 
 # speed of light
 c = 299792458
@@ -48,13 +48,12 @@ def gridding_single_timestep_v5(grid, uvwb, visb, freq):
     iu_idx = iu + image_size // 2
     iv_idx = iv + image_size // 2
 
-    for i in range(num_timesteps):
-        for j in range(num_baselines):
+    for i in range(iu_idx.shape[0]):
+        for j in range(iu_idx.shape[1]):
             grid[iu_idx[i, j], iv_idx[i, j]] += visb[i, j]
 
     return grid
 
-@profile
 def gridding_v5(uvwt, vist, freq):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
     for t in range(num_timesteps):

@@ -41,7 +41,6 @@ def calculate_indices_v1(uvw_0, uvw_1, f):
     iv_idx = iv + image_size//2
     return iu_idx, iv_idx
 
-@profile
 def gridding_v1(uvwt, vist, frq):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
     
