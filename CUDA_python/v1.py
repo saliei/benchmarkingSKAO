@@ -5,20 +5,23 @@ import ctypes
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
+from mpi4py import MPI
 
 image_size = 2048
 image_name = "v1_CUDA.png"
 dataset_path = "../example_simulation.zarr"
 
+# comm = MPI.COMM_WORLD
+
 libgrid = ctypes.CDLL("./libgrid_cuda.so")
 
-libgrid.gridding_cuda.argtypes = [
+libgrid.gridding_cuda_mpi.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.complex128, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.double, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.complex128, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype=np.double, flags='C_CONTIGUOUS'),
 ]
-libgrid.gridding_cuda.restype = None
+libgrid.gridding_cuda_mpi.restype = None
 
 def open_dataset(dataset_path):
     dataset = xr.open_zarr(dataset_path)
@@ -38,7 +41,7 @@ vist_flat = vist.compute().values.ravel()
 freq_flat = freq.compute().values.ravel()
 
 start_gridding_time = time.perf_counter()
-libgrid.gridding_cuda(grid_flat, uvwt_flat, vist_flat, freq_flat)
+libgrid.gridding_cuda_mpi(grid_flat, uvwt_flat, vist_flat, freq_flat)
 end_gridding_time = time.perf_counter()
 gridding_time = end_gridding_time - start_gridding_time
 print(f"gridding time: {gridding_time:10.8f}")

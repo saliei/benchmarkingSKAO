@@ -87,6 +87,7 @@ void gridding_cuda(std::complex<double> *grid, double *uvwt, std::complex<double
 // we assume a CUDA aware MPI implementation
 void gridding_cuda_mpi(std::complex<double> *grid, double *uvwt, std::complex<double> *vist, double *freq) {
     int rank, size;
+    MPI_Init(NULL, NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -151,5 +152,7 @@ void gridding_cuda_mpi(std::complex<double> *grid, double *uvwt, std::complex<do
 
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
+
+    MPI_Finalize();
 }
 
