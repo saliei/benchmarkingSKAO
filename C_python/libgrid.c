@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <complex.h>
 #include <math.h>
 #include <omp.h>
@@ -11,7 +12,7 @@
 void gridding_omp(double complex *grid ,double *uvwt, double complex *vist, double *freq) {
     int i, j, k;
 
-#pragma omp parallel for collapse(2) schedule(static) shared(grid, uvwt, vist, freq)
+#pragma omp parallel for collapse(2) schedule(static) private(i, j, k)shared(grid, uvwt, vist, freq)
     for (i = 0; i < TIMESTEPS; i++) {
         for (j = 0; j < BASELINES; j++) {
             for (k = 0; k < FREQUENCS; k++) {
@@ -40,7 +41,7 @@ void gridding_mpi_omp(double complex *grid, double *uvwt, double complex *vist, 
 
     double complex *grid_local = (double complex*)calloc(IMAGE_SIZE * IMAGE_SIZE, sizeof(double complex));
 
-#pragma omp parallel for collapse(2) schedule(static) shared(grid, uvwt, vist, freq)
+#pragma omp parallel for collapse(2) schedule(static) private(i, j, k) shared(grid, uvwt, vist, freq)
     for (i = 0; i < TIMESLICE; i++) {
         for (j = 0; j < BASELINES; j++) {
             for (k = 0; k < FREQUENCS; k++) {
@@ -64,7 +65,7 @@ void gridding_mpi_omp(double complex *grid, double *uvwt, double complex *vist, 
 void gridding_simd(double complex *grid, double *uvwt, double complex *vist, double *freq) {
     int i, j, k;
 
-#pragma omp parallel for collapse(2) private(i, j, k) schedule(static)
+#pragma omp parallel for collapse(2) schedule(static) private(i, j, k) shared(grid, uvwt, vist, freq)
     for (i = 0; i < TIMESTEPS; i++) {
         for (j = 0; j < BASELINES; j++) {
             // vectorize the innermost loop using SIMD instructions
@@ -119,7 +120,7 @@ void gridding_simd_mpi(double complex *grid, double *uvwt, double complex *vist,
 
     double complex *grid_local = (double complex*)calloc(IMAGE_SIZE * IMAGE_SIZE, sizeof(double complex));
 
-#pragma omp parallel for collapse(2) private(i, j, k) schedule(static)
+#pragma omp parallel for collapse(2) schedule(static) private(i, j, k) shared(grid, uvwt, vist, freq)
     for (i = 0; i < TIMESLICE; i++) {
         for (j = 0; j < BASELINES; j++) {
             // vectorize the innermost loop using SIMD instructions

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 
 import time
@@ -10,7 +9,7 @@ from mpi4py import MPI
 
 image_size = 2048
 image_name = "v2_C.png"
-dataset_path = "./example_simulation.zarr"
+dataset_path = "../example_simulation.zarr"
 
 libgrid = ctypes.CDLL("./libgrid.so")
 

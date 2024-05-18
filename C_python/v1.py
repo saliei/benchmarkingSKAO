@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 
 import time
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 
 image_size = 2048
 image_name = "v1_C.png"
-dataset_path = "./example_simulation.zarr"
+dataset_path = "../example_simulation.zarr"
 
 libgrid = ctypes.CDLL("./libgrid.so")
 
