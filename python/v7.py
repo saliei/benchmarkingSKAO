@@ -17,19 +17,16 @@ theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
 image_name = "v6.png"
-n_workers = 4
+n_workers = 128
 
 print("**v6**")
+print(f"n_workers: {n_workers}")
 start_dataset_time = time.perf_counter()
-dataset = open_dataset(dataset_path)
+dataset = xr.open_zarr(dataset_path)
 end_dataset_time = time.perf_counter()
 print(f"openning dataset: {end_dataset_time - start_dataset_time}s")
 num_timesteps = len(dataset.time)
 num_baselines = len(dataset.baseline_id)
-
-def open_dataset(dataset_path):
-    dataset = xr.open_zarr(dataset_path)
-    return dataset
 
 def fourier_transform(grid):
     image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(grid))).real
@@ -38,7 +35,6 @@ def fourier_transform(grid):
 def plot_image(image):
     plt.figure(figsize=(8,8))
     plt.imsave(image_name ,image)
-
 
 def sum_vis(grid, iu, iv, vis):
     np.add.at(grid, (iu, iv), vis)

@@ -17,19 +17,16 @@ dataset_path = "./example_simulation.zarr"
 image_name = "v8.png"
 
 print("**v8**")
-dataset = open_dataset(dataset_path)
+dataset = xr.open_zarr(dataset_path)
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
+print(f"rank: {rank}, size: {size}")
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY
 freq = dataset.frequency.data
-
-def open_dataset(dataset_path):
-    dataset = xr.open_zarr(dataset_path)
-    return dataset
 
 def fourier_transform(grid):
     image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(grid))).real

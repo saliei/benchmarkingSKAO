@@ -16,9 +16,13 @@ theta = 0.0125
 dataset_path = "../example_simulation.zarr"
 image_name = "v0.png"
 
-def open_dataset(dataset_path):
-    dataset = xr.open_zarr(dataset_path)
-    return dataset
+print("**v0**")
+start_dataset_time = time.perf_counter()
+dataset = xr.open_zarr(dataset_path)
+end_dataset_time = time.perf_counter()
+print(f"openning dataset: {end_dataset_time - start_dataset_time}s")
+num_timesteps = len(dataset.time)
+num_baselines = len(dataset.baseline_id)
 
 def fourier_transform(grid):
     image = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(grid))).real
@@ -42,14 +46,6 @@ def gridding_v0(uvwt, vist, freq):
                 grid[iu_idx, iv_idx] += vi
 
     return grid
-
-print("**v0**")
-start_dataset_time = time.perf_counter()
-dataset = open_dataset(dataset_path)
-end_dataset_time = time.perf_counter()
-print(f"openning dataset: {end_dataset_time - start_dataset_time}s")
-num_timesteps = len(dataset.time)
-num_baselines = len(dataset.baseline_id)
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY
