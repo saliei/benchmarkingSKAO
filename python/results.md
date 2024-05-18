@@ -66,62 +66,147 @@ user    0m4.819s
 sys     0m4.036s
 
 
-## v6
-[saliei@epyc007 python]$ time ./v6.py
-**v6**
-n_workers: 8
-openning dataset: 0.20832469398737885s
-gridding: 1.9457385369896656s
-fourier transform: 0.39672539799357764s
+## v6 (--ntasks=1 --cpus-per-task=128)
+n_workers: 1
+openning dataset: 0.18721193200326525s
+gridding: 2.169487355000456s
+fourier transform: 0.3974960689956788s
 
-real    0m4.644s
-user    0m6.009s
-sys     0m4.195s
-[saliei@epyc007 python]$ vmi v6.py
-bash: vmi: command not found
-[saliei@epyc007 python]$ vim v6.py
-[saliei@epyc007 python]$ time ./v6.py
-**v6**
+
+n_workers: 2
+openning dataset: 0.18727336700248998s
+gridding: 1.6808973519946449s
+fourier transform: 0.3978821409982629s
+
+
 n_workers: 4
-openning dataset: 0.18604543100809678s
-gridding: 1.5404350349999731s
-fourier transform: 0.3889356419967953s
+openning dataset: 0.18670512299286202s
+gridding: 1.6169453600014094s
+fourier transform: 0.40203026599192526s
 
-real    0m4.228s
-user    0m5.372s
-sys     0m3.849s
-[saliei@epyc007 python]$ vim v6.py
-[saliei@epyc007 python]$ time ./v6.py
-**v6**
+
+n_workers: 8
+openning dataset: 0.187035241004196s
+gridding: 1.990561582002556s
+fourier transform: 0.40047839100589044s
+
+
 n_workers: 16
-openning dataset: 0.18632192400400527s
-gridding: 2.990788358001737s
-fourier transform: 0.3987353639968205s
+openning dataset: 0.18705387599766254s
+gridding: 3.340566339000361s
+fourier transform: 0.3988068420003401s
 
-real    0m5.693s
-user    0m8.174s
-sys     0m4.832s
-[saliei@epyc007 python]$ vim v6.py
-[saliei@epyc007 python]$ vim v6.py
-[saliei@epyc007 python]$ time ./v6.py
-**v6**
+
 n_workers: 32
-openning dataset: 0.20795436899061315s
-gridding: 5.300075590988854s
-fourier transform: 0.398038721003104s
+openning dataset: 0.19610115799878258s
+gridding: 5.787424120004289s
+fourier transform: 0.3981341189937666s
 
-real    0m8.013s
-user    0m11.890s
-sys     0m6.169s
-[saliei@epyc007 python]$ vim v6.py
-[saliei@epyc007 python]$ time ./v6.py
-**v6**
+
 n_workers: 64
-openning dataset: 0.1848883369966643s
-gridding: 9.817494039991288s
-fourier transform: 0.4032062530022813s
+openning dataset: 0.18664818500110414s
+gridding: 10.388921799996751s
+fourier transform: 0.3982745009998325s
 
-real    0m12.580s
-user    0m18.960s
-sys     0m9.019s
+
+---
+## v7 (--ntasks=128 --cpus-per-task=1)
+-np 1:
+rank: 0, gridding: 94.567689998s
+rank: 0, fourier transform: 0.4197679290000025s
+
+-np 2:
+rank: 1, gridding: 18.315493914s
+rank: 0, gridding: 18.3754022s
+rank: 0, fourier transform: 0.43230179100000043s
+
+-np 4:
+rank: 1, gridding: 6.115694998s
+rank: 2, gridding: 6.141815479s
+rank: 3, gridding: 6.167218696s
+rank: 0, gridding: 6.284610261s
+rank: 0, fourier transform: 0.4652353420000006s
+
+-np 8:
+rank: 1, gridding: 3.166811525s
+rank: 2, gridding: 3.218425261s
+rank: 3, gridding: 3.2811227929999998s
+rank: 4, gridding: 3.352102278s
+rank: 5, gridding: 3.424314107s
+rank: 6, gridding: 3.49606723s
+rank: 7, gridding: 3.585844498s
+rank: 0, gridding: 3.844637386s
+rank: 0, fourier transform: 0.5189543589999994s
+
+-np 16:
+rank: 1, gridding: 2.759325734s
+rank: 2, gridding: 2.740695073s
+rank: 3, gridding: 2.794438345s
+rank: 4, gridding: 2.818070017s
+rank: 5, gridding: 2.872786922s
+rank: 6, gridding: 2.857225165s
+rank: 7, gridding: 2.890952553s
+rank: 8, gridding: 2.938419608s
+rank: 9, gridding: 2.99211462s
+rank: 10, gridding: 2.988987307s
+rank: 11, gridding: 3.031223451s
+rank: 12, gridding: 3.093304239s
+rank: 13, gridding: 3.074435032s
+rank: 14, gridding: 3.111195727s
+rank: 15, gridding: 3.170159141s
+rank: 0, gridding: 3.618410553s
+rank: 0, fourier transform: 0.6500653469999995s
+
+
+
+---
+## v8
+
+-np 1:
+rank: 0, gridding: 34.290316268s
+rank: 0, fourier transform: 0.41636764600000475s
+
+-np 2:
+rank: 1, gridding: 24.196292377s
+rank: 0, gridding: 24.256467817s
+rank: 0, fourier transform: 0.43358839300000085s
+
+-np 4:
+rank: 1, gridding: 11.485456657s
+rank: 2, gridding: 11.510378898s
+rank: 3, gridding: 11.538851934s
+rank: 0, gridding: 11.656383204s
+rank: 0, fourier transform: 0.4634412680000004s
+
+-np 8:
+rank: 1, gridding: 8.61479335s
+rank: 2, gridding: 8.662984066s
+rank: 3, gridding: 8.670107189s
+rank: 4, gridding: 8.702947651s
+rank: 5, gridding: 8.729351855s
+rank: 6, gridding: 8.765435528s
+rank: 7, gridding: 8.803533251s
+rank: 0, gridding: 9.023790287s
+rank: 0, fourier transform: 0.5330464880000001s
+
+-np 16:
+rank: 1, gridding: 10.233861211s
+rank: 2, gridding: 10.267041892s
+rank: 3, gridding: 10.35908317s
+rank: 4, gridding: 10.37874272s
+rank: 5, gridding: 10.471006105s
+rank: 6, gridding: 10.492583846s
+rank: 7, gridding: 10.507564581s
+rank: 8, gridding: 10.558529239s
+rank: 9, gridding: 10.610070288s
+rank: 10, gridding: 10.654065962s
+rank: 11, gridding: 10.700630566s
+rank: 12, gridding: 10.728463115s
+rank: 13, gridding: 10.799255439s
+rank: 14, gridding: 10.832754184s
+rank: 15, gridding: 10.928230974s
+rank: 0, gridding: 11.382233009s
+rank: 0, fourier transform: 0.6530621409999995s
+
+
 
