@@ -1,35 +1,33 @@
 #include <cuda_runtime.h>
+#include <complex>
 #include <cmath>
 #include <cstdio>
-#include <complex>
-#include "gridding.h"
 
-#define IMAGE_SIZE 2048
-#define IMAGE_SIZE_HALF 1024
-#define THETA 0.0125
-#define C 299792458
-#define THETA_OVER_C 4.16955e-11
+#include "libgrid.h"
 
-#define TIMESTEPS 512
-#define BASELINES 351
-#define FREQUENCS 256
+
+
+
+
 
 __global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, double *uvw_data, double *visibility_real, double *visibility_imag, double *frequency_data) {
-    int timestep = blockIdx.x;
-    int baseline = blockIdx.y;
-    int freq = threadIdx.x;
+    int i = blockIdx.x;
+    int j = threadIdx.x;
+    int k;
 
-    double vis_real = visibility_real[(timestep * BASELINES * FREQUENCS) + (baseline * FREQUENCS) + freq];
-    double vis_imag = visibility_imag[(timestep * BASELINES * FREQUENCS) + (baseline * FREQUENCS) + freq];
-    double frequency = frequency_data[freq];
+    for (k = 0; k < FREQUENCS; k++) {
+        double vis_real = visibility_real[(i * BASELINES * FREQUENCS) + (j * FREQUENCS) + k];
+        double vis_imag = visibility_imag[(i * BASELINES * FREQUENCS) + (j * FREQUENCS) + k];
+        double freq = frequency_data[k];
 
-    int iu = (int)round(THETA_OVER_C * uvw_data[(timestep * BASELINES * 3) + (baseline * 3) + 0] * frequency);
-    int iv = (int)round(THETA_OVER_C * uvw_data[(timestep * BASELINES * 3) + (baseline * 3) + 1] * frequency);
-    int iu_idx = iu + IMAGE_SIZE / 2;
-    int iv_idx = iv + IMAGE_SIZE / 2;
+        int iu = (int)round(THETA_OVER_C * uvw_data[(i * BASELINES * 3) + (j * 3) + 0] * freq);
+        int iv = (int)round(THETA_OVER_C * uvw_data[(i * BASELINES * 3) + (j * 3) + 1] * freq);
+        int iu_idx = iu + IMAGE_SIZE / 2;
+        int iv_idx = iv + IMAGE_SIZE / 2;
 
-    atomicAdd(&(grid_real[iu_idx * IMAGE_SIZE + iv_idx]), vis_real);
-    atomicAdd(&(grid_imag[iu_idx * IMAGE_SIZE + iv_idx]), vis_imag);
+        atomicAdd(&(grid_real[iu_idx * IMAGE_SIZE + iv_idx]), vis_real);
+        atomicAdd(&(grid_imag[iu_idx * IMAGE_SIZE + iv_idx]), vis_imag);
+    }
 }
 
 extern "C" void gridding_cuda(std::complex<double> *grid, double *uvw_data, std::complex<double> *visibility_data, double *frequency_data) {
@@ -66,10 +64,7 @@ extern "C" void gridding_cuda(std::complex<double> *grid, double *uvw_data, std:
     cudaMemcpy(d_visibility_imag, visibility_imag, TIMESTEPS * BASELINES * FREQUENCS * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_frequency_data, frequency_data, FREQUENCS * sizeof(double), cudaMemcpyHostToDevice);
 
-    dim3 gridDim(TIMESTEPS, BASELINES);
-    dim3 blockDim(FREQUENCS);
-
-    gridding_cuda_kernel<<<gridDim, blockDim>>>(d_grid_real, d_grid_imag, d_uvw_data, d_visibility_real, d_visibility_imag, d_frequency_data);
+    gridding_cuda_kernel<<<TIMESTEPS, BASELINES>>>(d_grid_real, d_grid_imag, d_uvw_data, d_visibility_real, d_visibility_imag, d_frequency_data);
 
     cudaMemcpy(grid_real, d_grid_real, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(grid_imag, d_grid_imag, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyDeviceToHost);
