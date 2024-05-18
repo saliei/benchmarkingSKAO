@@ -1,26 +1,17 @@
+#include <mpi.h>
 #include <cuda_runtime.h>
+#include <cuComplex.h>
 #include <cmath>
 #include <cstdio>
-#include <complex>
-#include "gridding.h"
 
-#define IMAGE_SIZE 2048
-#define IMAGE_SIZE_HALF 1024
-#define THETA 0.0125
-#define C 299792458
-#define THETA_OVER_C 4.16955e-11
+#include "libgrid.h"
 
-#define TIMESTEPS 512
-#define BASELINES 351
-#define FREQUENCS 256
-
-__global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, double *uvw_data, double *visibility_real, double *visibility_imag, double *frequency_data) {
-    int timestep = blockIdx.x;
+__global__ void gridding_cuda_kernel(cuDoubleComplex *restrict grid, double *restrict uvw_data, cuDoubleComplex *restrict visibility_data, double *restrict frequency_data, int timesteps_start, int timesteps_end) {
+    int timestep = timesteps_start + blockIdx.x;
     int baseline = blockIdx.y;
     int freq = threadIdx.x;
 
-    double vis_real = visibility_real[(timestep * BASELINES * FREQUENCS) + (baseline * FREQUENCS) + freq];
-    double vis_imag = visibility_imag[(timestep * BASELINES * FREQUENCS) + (baseline * FREQUENCS) + freq];
+    cuDoubleComplex vis = visibility_data[(timestep * BASELINES * FREQUENCS) + (baseline * FREQUENCS) + freq];
     double frequency = frequency_data[freq];
 
     int iu = (int)round(THETA_OVER_C * uvw_data[(timestep * BASELINES * 3) + (baseline * 3) + 0] * frequency);
@@ -28,66 +19,91 @@ __global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, doubl
     int iu_idx = iu + IMAGE_SIZE / 2;
     int iv_idx = iv + IMAGE_SIZE / 2;
 
-    atomicAdd(&(grid_real[iu_idx * IMAGE_SIZE + iv_idx]), vis_real);
-    atomicAdd(&(grid_imag[iu_idx * IMAGE_SIZE + iv_idx]), vis_imag);
+    atomicAdd(&(grid[iu_idx * IMAGE_SIZE + iv_idx].x), cuCreal(vis));
+    atomicAdd(&(grid[iu_idx * IMAGE_SIZE + iv_idx].y), cuCimag(vis));
 }
 
-extern "C" void gridding_cuda(std::complex<double> *grid, double *uvw_data, std::complex<double> *visibility_data, double *frequency_data) {
-    double *d_grid_real, *d_grid_imag;
+extern "C" void gridding_cuda_mpi(std::complex<double> *restrict grid, double *restrict uvw_data, std::complex<double> *restrict visibility_data, double *restrict frequency_data) {
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int timesteps_per_rank = TIMESTEPS / size;
+    int timesteps_start = rank * timesteps_per_rank;
+    int timesteps_end = (rank == size - 1) ? TIMESTEPS : timesteps_start + timesteps_per_rank;
+
+    cuDoubleComplex *d_grid;
     double *d_uvw_data;
-    double *d_visibility_real, *d_visibility_imag;
+    cuDoubleComplex *d_visibility_data;
     double *d_frequency_data;
 
-    cudaMalloc(&d_grid_real, IMAGE_SIZE * IMAGE_SIZE * sizeof(double));
-    cudaMalloc(&d_grid_imag, IMAGE_SIZE * IMAGE_SIZE * sizeof(double));
+    // Allocate memory on the GPU
+    cudaMalloc(&d_grid, IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex));
     cudaMalloc(&d_uvw_data, TIMESTEPS * BASELINES * 3 * sizeof(double));
-    cudaMalloc(&d_visibility_real, TIMESTEPS * BASELINES * FREQUENCS * sizeof(double));
-    cudaMalloc(&d_visibility_imag, TIMESTEPS * BASELINES * FREQUENCS * sizeof(double));
+    cudaMalloc(&d_visibility_data, TIMESTEPS * BASELINES * FREQUENCS * sizeof(cuDoubleComplex));
     cudaMalloc(&d_frequency_data, FREQUENCS * sizeof(double));
 
-    double *grid_real = (double*) malloc(IMAGE_SIZE * IMAGE_SIZE * sizeof(double));
-    double *grid_imag = (double*) malloc(IMAGE_SIZE * IMAGE_SIZE * sizeof(double));
-    for (int idx = 0; idx < IMAGE_SIZE * IMAGE_SIZE; ++idx) {
-        grid_real[idx] = std::real(grid[idx]);
-        grid_imag[idx] = std::imag(grid[idx]);
-    }
+    // Initialize grid on the GPU
+    cudaMemset(d_grid, 0, IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex));
 
-    double *visibility_real = (double*) malloc(TIMESTEPS * BASELINES * FREQUENCS * sizeof(double));
-    double *visibility_imag = (double*) malloc(TIMESTEPS * BASELINES * FREQUENCS * sizeof(double));
-    for (int idx = 0; idx < TIMESTEPS * BASELINES * FREQUENCS; ++idx) {
-        visibility_real[idx] = std::real(visibility_data[idx]);
-        visibility_imag[idx] = std::imag(visibility_data[idx]);
-    }
-
-    cudaMemcpy(d_grid_real, grid_real, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_grid_imag, grid_imag, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyHostToDevice);
+    // Copy data to the GPU
     cudaMemcpy(d_uvw_data, uvw_data, TIMESTEPS * BASELINES * 3 * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_visibility_real, visibility_real, TIMESTEPS * BASELINES * FREQUENCS * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_visibility_imag, visibility_imag, TIMESTEPS * BASELINES * FREQUENCS * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_visibility_data, visibility_data, TIMESTEPS * BASELINES * FREQUENCS * sizeof(cuDoubleComplex), cudaMemcpyHostToDevice);
     cudaMemcpy(d_frequency_data, frequency_data, FREQUENCS * sizeof(double), cudaMemcpyHostToDevice);
 
-    dim3 gridDim(TIMESTEPS, BASELINES);
+    // Launch the CUDA kernel
+    dim3 gridDim(timesteps_per_rank, BASELINES);
     dim3 blockDim(FREQUENCS);
 
-    gridding_cuda_kernel<<<gridDim, blockDim>>>(d_grid_real, d_grid_imag, d_uvw_data, d_visibility_real, d_visibility_imag, d_frequency_data);
+    // Create CUDA events for timing
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
 
-    cudaMemcpy(grid_real, d_grid_real, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(grid_imag, d_grid_imag, IMAGE_SIZE * IMAGE_SIZE * sizeof(double), cudaMemcpyDeviceToHost);
+    // Record the start event
+    cudaEventRecord(start, 0);
 
-    for (int idx = 0; idx < IMAGE_SIZE * IMAGE_SIZE; ++idx) {
-        grid[idx] = std::complex<double>(grid_real[idx], grid_imag[idx]);
+    gridding_cuda_kernel<<<gridDim, blockDim>>>(d_grid, d_uvw_data, d_visibility_data, d_frequency_data, timesteps_start, timesteps_end);
+
+    // Record the stop event
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+
+    // Calculate elapsed time
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    printf("Rank %d: CUDA kernel execution time: %f ms\n", rank, milliseconds);
+
+    // Copy results back to the CPU
+    cuDoubleComplex *h_grid = (cuDoubleComplex*) malloc(IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex));
+    cudaMemcpy(h_grid, d_grid, IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
+
+    // Reduce the results across all ranks
+    cuDoubleComplex *global_grid = (rank == 0) ? (cuDoubleComplex*) malloc(IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex)) : nullptr;
+    MPI_Reduce(h_grid, global_grid, IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex), MPI_DOUBLE_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    // Combine the final grid on the root rank
+    if (rank == 0) {
+        #pragma omp parallel for
+        for (int idx = 0; idx < IMAGE_SIZE * IMAGE_SIZE; ++idx) {
+            grid[idx] = std::complex<double>(cuCreal(global_grid[idx]), cuCimag(global_grid[idx]));
+        }
+
+        // Free global grid memory
+        free(global_grid);
     }
 
-    cudaFree(d_grid_real);
-    cudaFree(d_grid_imag);
+    // Free GPU memory
+    cudaFree(d_grid);
     cudaFree(d_uvw_data);
-    cudaFree(d_visibility_real);
-    cudaFree(d_visibility_imag);
+    cudaFree(d_visibility_data);
     cudaFree(d_frequency_data);
 
-    free(grid_real);
-    free(grid_imag);
-    free(visibility_real);
-    free(visibility_imag);
+    // Free CPU memory
+    free(h_grid);
+
+    // Destroy CUDA events
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 }
 
