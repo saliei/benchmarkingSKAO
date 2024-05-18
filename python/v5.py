@@ -57,8 +57,7 @@ def gridding_single_timestep_v5(grid, uvwb, visb, freq):
 def gridding_v5(uvwt, vist, freq):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
     for t in range(num_timesteps):
-        grid_timestep = gridding_single_timestep_v5(grid, uvwt[t].compute().data, vist[t].compute().data, freq)
-        grid += grid_timestep
+        grid += gridding_single_timestep_v5(grid, uvwt[t].compute().data, vist[t].compute().data, freq)
     return grid
 
 
