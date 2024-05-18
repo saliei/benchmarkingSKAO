@@ -420,3 +420,43 @@ rank: 64, gridding time: 0.68994221
 rank: 0, gridding time: 0.67451002
 rank: 0, fft time:      0.43646528
 
+---
+## v3
+
+export OMP_NUM_THREADS=1
+gridding time: 0.16222181
+fft time: 0.39176541
+
+export OMP_NUM_THREADS=2
+gridding time: 0.08876267
+fft time: 0.39064849
+
+export OMP_NUM_THREADS=4
+gridding time: 0.04572602
+fft time: 0.39071379
+
+export OMP_NUM_THREADS=8
+gridding time: 0.03015849
+fft time: 0.39206691
+
+
+export OMP_NUM_THREADS=16
+gridding time: 0.02676671
+fft time: 0.39244940
+
+
+export OMP_NUM_THREADS=32
+gridding time: 0.03026888
+fft time: 0.39907465
+
+
+export OMP_NUM_THREADS=64
+gridding time: 0.03473859
+fft time: 0.39374324
+
+export OMP_NUM_THREADS=128
+gridding time: 0.04532792
+fft time: 0.39529701
+
+---
+## v4
