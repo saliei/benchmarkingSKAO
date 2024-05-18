@@ -17,7 +17,7 @@ theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
 image_name = "v6.png"
-n_workers = 128
+n_workers = 4
 
 print("**v6**")
 print(f"n_workers: {n_workers}")
@@ -49,6 +49,8 @@ def gridding_v7(uvwt, vist, freq, n_workers=4):
     iv = (theta * uvw1 * freq / c).round().astype(int)  # (512, 351, 256)
     iu_idx = iu + image_size // 2
     iv_idx = iv + image_size // 2
+
+    vist = np.swapaxes(vist, 1, -1) # (512, 256, 351)
 
     # split data into chunks to be processed by a thread
     def chunk_data(data, n_chunks):
