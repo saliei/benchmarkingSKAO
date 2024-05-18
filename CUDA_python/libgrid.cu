@@ -5,26 +5,6 @@
 #include "libgrid.h"
 
 
-__global__ void gridding_cuda_kernel(cuDoubleComplex *grid, double *uvwt, cuDoubleComplex *vist, double *freq) {
-    int i = blockIdx.x;
-    int j = threadIdx.x;
-    int k;
-
-    for (k = 0; k < FREQUENCS; k++) {
-        cuDoubleComplex vis = vist[(i * BASELINES * FREQUENCS) + (j * FREQUENCS) + k];
-        double f = freq[k];
-
-        int iu = (int)round(THETA_OVER_C * uvwt[(i * BASELINES * 3) + (j * 3) + 0] * f);
-        int iv = (int)round(THETA_OVER_C * uvwt[(i * BASELINES * 3) + (j * 3) + 1] * f);
-        int iu_idx = iu + IMAGE_SIZE_HALF;
-        int iv_idx = iv + IMAGE_SIZE_HALF;
-
-        atomicAdd(&(grid[iu_idx * IMAGE_SIZE + iv_idx].x), cuCreal(vis));
-        atomicAdd(&(grid[iu_idx * IMAGE_SIZE + iv_idx].y), cuCimag(vis));
-
-    }
-}
-
 __global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, double *uvw_data, double *visibility_real, double *visibility_imag, double *frequency_data) {
     int i = blockIdx.x;
     int j = threadIdx.x;
@@ -44,6 +24,7 @@ __global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, doubl
         atomicAdd(&(grid_imag[iu_idx * IMAGE_SIZE + iv_idx]), vis_imag);
     }
 }
+
 
 extern "C" void gridding_cuda(double complex *grid, double *uvw_data, double complex *visibility_data, double *frequency_data) {
     double *d_grid_real, *d_grid_imag;
