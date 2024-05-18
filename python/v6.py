@@ -17,7 +17,7 @@ theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
 image_name = "v6.png"
-n_workers = 2
+n_workers = 64
 
 print("**v6**")
 print(f"n_workers: {n_workers}")
