@@ -17,13 +17,13 @@ dataset_path = "../example_simulation.zarr"
 # cutoff time step, used for testing, 512 is the max
 image_name = "v8.png"
 
-print("**v9**")
+#print("**v8**")
 dataset = xr.open_zarr(dataset_path)
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
-print(f"rank: {rank}, size: {size}")
+#print(f"rank: {rank}, size: {size}")
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY
