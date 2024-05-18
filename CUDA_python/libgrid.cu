@@ -6,7 +6,7 @@
 
 #include "libgrid.h"
 
-__global__ void gridding_cuda_kernel(cuDoubleComplex *restrict grid, double *restrict uvw_data, cuDoubleComplex *restrict visibility_data, double *restrict frequency_data, int timesteps_start, int timesteps_end) {
+__global__ void gridding_cuda_kernel(cuDoubleComplex *grid, double *uvw_data, cuDoubleComplex * visibility_data, double * frequency_data, int timesteps_start, int timesteps_end) {
     int timestep = timesteps_start + blockIdx.x;
     int baseline = blockIdx.y;
     int freq = threadIdx.x;
@@ -23,8 +23,9 @@ __global__ void gridding_cuda_kernel(cuDoubleComplex *restrict grid, double *res
     atomicAdd(&(grid[iu_idx * IMAGE_SIZE + iv_idx].y), cuCimag(vis));
 }
 
-extern "C" void gridding_cuda_mpi(std::complex<double> *restrict grid, double *restrict uvw_data, std::complex<double> *restrict visibility_data, double *restrict frequency_data) {
+extern "C" void gridding_cuda_mpi(std::complex<double> * grid, double * uvw_data, std::complex<double> * visibility_data, double * frequency_data) {
     int rank, size;
+    MPI_Init(NULL, NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -72,7 +73,7 @@ extern "C" void gridding_cuda_mpi(std::complex<double> *restrict grid, double *r
     // Calculate elapsed time
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("Rank %d: CUDA kernel execution time: %f ms\n", rank, milliseconds);
+    //printf("Rank %d: CUDA kernel execution time: %f ms\n", rank, milliseconds);
 
     // Copy results back to the CPU
     cuDoubleComplex *h_grid = (cuDoubleComplex*) malloc(IMAGE_SIZE * IMAGE_SIZE * sizeof(cuDoubleComplex));
@@ -105,5 +106,7 @@ extern "C" void gridding_cuda_mpi(std::complex<double> *restrict grid, double *r
     // Destroy CUDA events
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
+
+    MPI_Finalize();
 }
 
