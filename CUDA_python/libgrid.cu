@@ -6,42 +6,8 @@
 #include "libgrid.h"
 
 
-__global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, double *uvw_data, double *visibility_real, double *visibility_imag, double *frequency_data) {
-    int i = blockIdx.x;
-    int j = threadIdx.x;
-    int k;
-
-    for (k = 0; k < FREQUENCS; k++) {
-        double vis_real = visibility_real[(i * BASELINES * FREQUENCS) + (j * FREQUENCS) + k];
-        double vis_imag = visibility_imag[(i * BASELINES * FREQUENCS) + (j * FREQUENCS) + k];
-        double freq = frequency_data[k];
-
-        int iu = (int)round(THETA_OVER_C * uvw_data[(i * BASELINES * 3) + (j * 3) + 0] * freq);
-        int iv = (int)round(THETA_OVER_C * uvw_data[(i * BASELINES * 3) + (j * 3) + 1] * freq);
-        int iu_idx = iu + IMAGE_SIZE / 2;
-        int iv_idx = iv + IMAGE_SIZE / 2;
-
-        atomicAdd(&(grid_real[iu_idx * IMAGE_SIZE + iv_idx]), vis_real);
-        atomicAdd(&(grid_imag[iu_idx * IMAGE_SIZE + iv_idx]), vis_imag);
-    }
-}
 
 
-#include <cuda_runtime.h>
-#include <cmath>
-#include <cstdio>
-#include <complex>
-#include "gridding.h"
-
-#define IMAGE_SIZE 2048
-#define IMAGE_SIZE_HALF 1024
-#define THETA 0.0125
-#define C 299792458
-#define THETA_OVER_C 4.16955e-11
-
-#define TIMESTEPS 512
-#define BASELINES 351
-#define FREQUENCS 256
 
 
 __global__ void gridding_cuda_kernel(double *grid_real, double *grid_imag, double *uvw_data, double *visibility_real, double *visibility_imag, double *frequency_data) {
