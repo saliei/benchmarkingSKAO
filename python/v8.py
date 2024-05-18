@@ -13,10 +13,11 @@ image_size = 2048
 # size of image on sky, directional cosines
 theta = 0.0125
 # dataset path
-dataset_path = "./example_simulation.zarr"
+dataset_path = "../example_simulation.zarr"
+# cutoff time step, used for testing, 512 is the max
 image_name = "v8.png"
 
-print("**v8**")
+print("**v9**")
 dataset = xr.open_zarr(dataset_path)
 
 comm = MPI.COMM_WORLD
@@ -36,44 +37,41 @@ def plot_image(image):
     plt.figure(figsize=(8,8)) 
     plt.imsave(image_name, image)
 
-def gridding_mpi_single_timestep_v7(grid, uvwt, vist, freq):
-    uvw0 = uvwt[:,0] 
-    uvw1 = uvwt[:,1]
-
-    uvw0 = np.expand_dims(uvw0, axis=0) # (1, 351)
-    uvw1 = np.expand_dims(uvw1, axis=0) # (1, 351)
-
-    iu = np.round(theta * uvw0 * freq / c).astype(int)
-    iv = np.round(theta * uvw1 * freq / c).astype(int)
-    iu_idx = iu + image_size // 2
-    iv_idx = iv + image_size // 2
-    
-    vist = np.swapaxes(vist, 0, 1)
-
-    np.add.at(grid, (iu_idx, iv_idx), vist)
-    
-    return grid
-
-def gridding_v7(uvwt, vist, freq, size, rank):
-    # number of time steps for each process
-    chunk_size = uvwt.shape[0]// size
+def gridding_v9(uvwt, vist, freq, size, rank):
+    # number of baselines to process for each process
+    chunk_size = uvwt.shape[1]// size
     start_idx = rank * chunk_size
-    end_idx = (rank + 1) * chunk_size if rank < size - 1 else uvwt.shape[0]
+    end_idx = (rank + 1) * chunk_size if rank < size - 1 else uvwt.shape[1]
     
     grid_local = np.zeros((image_size, image_size), dtype=np.complex128)
     freq = np.expand_dims(freq, axis=1) # (256, 1)
 
-    for t in range(start_idx, end_idx):
-        grid_local = gridding_mpi_single_timestep_v7(grid_local, uvwt[t], vist[t].compute().data, freq)
+    for t in range(uvwt.shape[0]):
+        uvwt_local = uvwt[t][start_idx:end_idx].compute().data
+        vist_local = vist[t][start_idx:end_idx].compute().data
+        uvw0 = uvwt_local[:,0]
+        uvw1 = uvwt_local[:,1]
+
+        uvw0 = np.expand_dims(uvw0, axis=0) # (1, 351)
+        uvw1 = np.expand_dims(uvw1, axis=0) # (1, 351)
+
+        iu = np.round(theta * uvw0 * freq / c).astype(int)
+        iv = np.round(theta * uvw1 * freq / c).astype(int)
+        iu_idx = iu + image_size // 2
+        iv_idx = iv + image_size // 2
+    
+        vist_local = np.swapaxes(vist_local, 0, 1)
+
+        np.add.at(grid_local, (iu_idx, iv_idx), vist_local)
 
     return grid_local
 
 
 start_gridding_time = MPI.Wtime()
-grid_local = gridding_v7(uvwt, vist, freq, size, rank)
+grid_local = gridding_v9(uvwt, vist, freq, size, rank)
 grid_global = comm.gather(grid_local, root=0)
 end_gridding_time = MPI.Wtime()
-print(f"rank: {rank}, gridding: {end_gridding_time - start_dataset_time}s")
+print(f"rank: {rank}, gridding: {end_gridding_time - start_gridding_time}s")
 
 if rank == 0:
     start_fft_time = MPI.Wtime()

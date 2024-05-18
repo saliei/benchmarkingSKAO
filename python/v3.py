@@ -17,7 +17,7 @@ theta = 0.0125
 dataset_path = "../example_simulation.zarr"
 image_name = "v3.png"
 
-print("**v3**")
+print("**v4**")
 start_dataset_time = time.perf_counter()
 dataset = xr.open_zarr(dataset_path)
 end_dataset_time = time.perf_counter()
@@ -34,7 +34,7 @@ def plot_image(image):
     plt.imsave(image_name ,image)
 
 
-def gridding_single_timestep_v1(grid, uvwb, visb, freq):
+def gridding_single_timestep_v4(grid, uvwb, visb, freq):
     uvw0 = uvwb[:,0]
     uvw1 = uvwb[:,1]
     uvw0 = np.expand_dims(uvw0, axis=0) # (1, 351)
@@ -51,18 +51,21 @@ def gridding_single_timestep_v1(grid, uvwb, visb, freq):
 
     return grid
 
-def gridding_v3(uvwt, vist, frq):
+def gridding_v4(uvwt, vist, freq):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
     for t in range(num_timesteps):
-        grid += gridding_single_timestep_v1(grid, uvwt[t].compute().data, vist[t].compute().data, frq)
+        uvwb = uvwt[t].compute().data
+        visb = vist[t].compute().data
+        grid = gridding_single_timestep_v4(grid, uvwb, visb, freq)
     return grid
+
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY
 freq = dataset.frequency.data
 
 start_gridding_time = time.perf_counter()
-grid = gridding_v3(uvwt, vist, freq)
+grid = gridding_v4(uvwt, vist, freq)
 end_gridding_time = time.perf_counter()
 print(f"gridding: {end_gridding_time - start_dataset_time}s")
 
