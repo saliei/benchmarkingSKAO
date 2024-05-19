@@ -109,7 +109,7 @@ fourier transform: 0.3982745009998325s
 ######
  ** ntasks=128 cpus-per-task=1 **
 
-np: :
+np: 1
 rank: 0, gridding: 94.567689998s
 rank: 0, fourier transform: 0.4197679290000025s
 
