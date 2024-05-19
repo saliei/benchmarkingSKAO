@@ -13,6 +13,15 @@
 #define BASELINES 351
 #define FREQUENCS 256
 
-extern "C" void gridding_cuda(std::complex<double> *grid, double *uvw_data, std::complex<double> *visibility_data, double *frequency_data);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void gridding_cuda(std::complex<double> *grid, double *uvwt, std::complex<double> *vist, double *freq);
+void gridding_cuda_mpi(std::complex<double> *grid, double *uvwt, std::complex<double> *vist, double *freq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LIBGRID_H
