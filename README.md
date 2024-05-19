@@ -8,3 +8,12 @@ The sources are as follow:
 - [CUDA_python](CUDA_python): Offload of the gridding fuinction to multi-GPUs with CUDA and MPI.
 
 For a summary of the results and scaling and bottlenecks see the jupyter notebook.
+
+**Notes:** 
+
+- To make the C shared library, `libgrid.so`, issue the `make` in the `C_python` directory, 
+note that an MPI compiler is needed, it is tested with GNU `mpicc`.
+
+- To make the CUDA shared libraries, by default `make` will compile the one 
+without the MPI communications,`libgrid_cuda.so`, for the one with MPI calls, `libgrid_cuda_mpi.so`, 
+issue the `make mpi`.
