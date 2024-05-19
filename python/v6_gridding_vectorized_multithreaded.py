@@ -17,9 +17,8 @@ theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
 image_name = "v6.png"
-n_workers = 16
+n_workers = 4
 
-#print("**v6**")
 print(f"n_workers: {n_workers}")
 start_dataset_time = time.perf_counter()
 dataset = xr.open_zarr(dataset_path)
@@ -41,7 +40,7 @@ def sum_vis(grid, iu, iv, vis):
     np.add.at(grid, (iu, iv), vis)
     return grid
 
-def gridding_v7(uvwt, vist, freq, n_workers=4):
+def gridding_v6(uvwt, vist, freq, n_workers=4):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
     uvw0 = uvwt[:,:,0]
     uvw1 = uvwt[:,:,1]
@@ -83,7 +82,7 @@ vist = dataset.VISIBILITY
 freq = dataset.frequency.data
 
 start_gridding_time = time.perf_counter()
-grid = gridding_v7(uvwt, vist, freq, n_workers=n_workers)
+grid = gridding_v6(uvwt, vist, freq, n_workers=n_workers)
 end_gridding_time = time.perf_counter()
 print(f"gridding: {end_gridding_time - start_dataset_time}s")
 

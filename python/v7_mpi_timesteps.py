@@ -16,13 +16,11 @@ theta = 0.0125
 dataset_path = "../example_simulation.zarr"
 image_name = "v7.png"
 
-#print("**v7**")
 dataset = xr.open_zarr(dataset_path)
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
-#print(f"rank: {rank}, size: {size}")
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY

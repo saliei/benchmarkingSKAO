@@ -17,7 +17,6 @@ theta = 0.0125
 dataset_path = "../example_simulation.zarr"
 image_name = "v2.png"
 
-print("**v2**")
 start_dataset_time = time.perf_counter()
 dataset = xr.open_zarr(dataset_path)
 end_dataset_time = time.perf_counter()

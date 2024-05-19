@@ -17,13 +17,11 @@ dataset_path = "../example_simulation.zarr"
 # cutoff time step, used for testing, 512 is the max
 image_name = "v8.png"
 
-#print("**v8**")
 dataset = xr.open_zarr(dataset_path)
 
 comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
-#print(f"rank: {rank}, size: {size}")
 
 uvwt = dataset.UVW
 vist = dataset.VISIBILITY
@@ -37,7 +35,7 @@ def plot_image(image):
     plt.figure(figsize=(8,8)) 
     plt.imsave(image_name, image)
 
-def gridding_v9(uvwt, vist, freq, size, rank):
+def gridding_v8(uvwt, vist, freq, size, rank):
     # number of baselines to process for each process
     chunk_size = uvwt.shape[1]// size
     start_idx = rank * chunk_size
@@ -68,7 +66,7 @@ def gridding_v9(uvwt, vist, freq, size, rank):
 
 
 start_gridding_time = MPI.Wtime()
-grid_local = gridding_v9(uvwt, vist, freq, size, rank)
+grid_local = gridding_v8(uvwt, vist, freq, size, rank)
 grid_global = comm.gather(grid_local, root=0)
 end_gridding_time = MPI.Wtime()
 print(f"rank: {rank}, gridding: {end_gridding_time - start_gridding_time}s")

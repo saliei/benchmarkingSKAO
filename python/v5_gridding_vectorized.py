@@ -15,9 +15,8 @@ image_size = 2048
 theta = 0.0125
 # dataset path
 dataset_path = "../example_simulation.zarr"
-image_name = "v1.png"
+image_name = "v5.png"
 
-print("**v1**")
 start_dataset_time = time.perf_counter()
 dataset = xr.open_zarr(dataset_path)
 end_dataset_time = time.perf_counter()
@@ -33,31 +32,32 @@ def plot_image(image):
     plt.figure(figsize=(8,8))
     plt.imsave(image_name ,image)
 
-@njit
-def calculate_indices_v1(uvw_0, uvw_1, f):
-    iu = round(theta * uvw_0 * f / c)
-    iv = round(theta * uvw_1 * f / c)
-    iu_idx = iu + image_size//2
-    iv_idx = iv + image_size//2
-    return iu_idx, iv_idx
-
-def gridding_v1(uvwt, vist, frq):
+def gridding_v5(uvwt, vist, freq):
     grid = np.zeros((image_size, image_size), dtype=np.complex128)
+    uvw0 = uvwt[:,:,0]
+    uvw1 = uvwt[:,:,1]
+
+    uvw0 = np.expand_dims(uvw0, axis=1) # (512, 351, 1)
+    uvw1 = np.expand_dims(uvw1, axis=1) # (512, 351, 1)
+    freq = np.expand_dims(freq, axis=1) # (1, 256)
+
+    iu = np.round(theta * uvw0 * freq / c).astype(int)
+    iv = np.round(theta * uvw1 * freq / c).astype(int)
+    iu_idx = iu + image_size // 2
+    iv_idx = iv + image_size // 2
+
+    vist = np.swapaxes(vist, 1, -1) # (512, 256, 351)
+    np.add.at(grid, (iu_idx, iv_idx), vist)
     
-    for (uvwb, visb) in zip(uvwt, vist):
-        for(uvw, vis) in zip(uvwb.compute().data, visb.compute().data):
-            for(fq, vi) in zip(frq, vis):
-                iu_idx, iv_idx = calculate_indices_v1(uvw[0], uvw[1], fq)
-                grid[iu_idx, iv_idx] += vi
-                
     return grid
 
-uvwt = dataset.UVW
-vist = dataset.VISIBILITY
-freq = dataset.frequency.data
+
+uvwt_np = dataset.UVW.compute().to_numpy()
+vist_np = dataset.VISIBILITY.compute().to_numpy()
+freq_np = dataset.frequency.compute().to_numpy()
 
 start_gridding_time = time.perf_counter()
-grid = gridding_v1(uvwt, vist, freq)
+grid = gridding_v5(uvwt_np, vist_np, freq_np)
 end_gridding_time = time.perf_counter()
 print(f"gridding: {end_gridding_time - start_dataset_time}s")
 
