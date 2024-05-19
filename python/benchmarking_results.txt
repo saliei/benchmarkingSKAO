@@ -1,5 +1,6 @@
-## v0
-**v0**
+######
+# v0 #
+######
 openning dataset: 0.019634439959190786s
 gridding: 232.06691551499534s
 fourier transform: 0.39494385302532464s
@@ -8,11 +9,9 @@ real    3m54.856s
 user    3m30.872s
 sys     0m23.525s
 
-
-**notes:** 1 core of epyc
-
-## v1
-**v1**
+######
+# v1 #
+#####
 openning dataset: 0.020160239073447883s
 gridding: 76.40704975405242s
 fourier transform: 0.39501506509259343s
@@ -21,8 +20,9 @@ real    1m19.187s
 user    1m10.612s
 sys     0m8.617s
 
-## v2
-**v2**
+######
+# v2 #
+######
 openning dataset: 0.019283825997263193s
 gridding: 1.7558171639684588s
 fourier transform: 0.3912698660278693s
@@ -31,10 +31,9 @@ real    0m4.732s
 user    0m3.744s
 sys     0m1.349s
 
-**notes:** 1 core of epyc
-
-## v3
-**v3**
+######
+# v3 #
+######
 openning dataset: 0.18852494699240196s
 gridding: 23.638135811997927s
 fourier transform: 0.3929694109974662s
@@ -43,9 +42,9 @@ real    0m26.396s
 user    0m50.379s
 sys     0m13.156s
 
-
-## v4
-**v4**
+######
+# v4 #
+######
 openning dataset: 0.20819946100527886s
 gridding: 26.77406486599648s
 fourier transform: 0.39936628300347365s
@@ -54,9 +53,9 @@ real    0m29.628s
 user    0m52.845s
 sys     0m13.364s
 
-
-## v5
-**v6**
+######
+# v5 #
+######
 openning dataset: 0.2125791080034105s
 gridding: 2.0906538140116027s
 fourier transform: 0.3965039550093934s
@@ -65,8 +64,11 @@ real    0m4.844s
 user    0m4.819s
 sys     0m4.036s
 
+######
+# v6 #
+######
+* ntasks=1 --cpus-per-task=128 *
 
-## v6 (--ntasks=1 --cpus-per-task=128)
 n_workers: 1
 openning dataset: 0.18721193200326525s
 gridding: 2.169487355000456s
