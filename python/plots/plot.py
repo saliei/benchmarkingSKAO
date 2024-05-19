@@ -14,6 +14,22 @@ versions_no_dist = [r"\texttt{v1}", r"\texttt{v2}", r"\texttt{v3}", r"\texttt{v4
 times_no_dist = [66.40, 1.75, 23.63, 26.77, 2.09]
 colors_no_dist = ["dimgray" for _ in range(len(times_no_dist))]
 
+v6_nworkers = ["1", "2", "4", "8", "16"]
+times_v6 = [2.16, 1.68, 1.61, 1.99, 3.34]
+colors_v6 = ["dimgray" for _ in range(len(times_v6))]
+
+
+def original():
+    fig, ax = plt.subplots(figsize=(5.5, 4))
+    bars = ax.bar(version_original, times_original, width=0.2, edgecolor="black", linewidth=1, color=colors_original)
+    ax.set_title(r"\rmfamily{Original Version}")
+    ax.set_ylabel(r"\rmfamily{Time(s)}")
+    ax.set_yscale("log")
+    ax.text(-0.1, max(times_original)-100, r'\texttt{opening\_dataset:} 0.02', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.1, max(times_original)-168, r'\texttt{gridding:} 232.06', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.1, max(times_original)-200, r'\texttt{fourier\_transform:} 0.40', ha='left', va='center', fontsize=10, color='black')
+    plt.savefig("v0_original.png")
+
 def v1tov5():
     fig, ax = plt.subplots(figsize=(5.5, 4))
     bars = ax.bar(versions_no_dist, times_no_dist, width=0.4, edgecolor="black", linewidth=1, color=colors_no_dist)
@@ -27,16 +43,21 @@ def v1tov5():
     ax.text(0.4, max(times_no_dist)-21, r'\texttt{v5_gridding_vectorized:} 2.09', ha='left', va='center', fontsize=10, color='black')
     plt.savefig("v1tov5.png")
 
-def original():
+
+def v6():
     fig, ax = plt.subplots(figsize=(5.5, 4))
-    bars = ax.bar(version_original, times_original, width=0.2, edgecolor="black", linewidth=1, color=colors_original)
-    ax.set_title(r"\rmfamily{Original Version}")
+    bars = ax.bar(v6_nworkers, times_v6, width=0.4, edgecolor="black", linewidth=1, color="dimgray")
+    ax.set_title(r"\rmfamily{Version 6}")
+    ax.set_xlabel(r"\rmfamily{number of threads}")
     ax.set_ylabel(r"\rmfamily{Time(s)}")
-    ax.set_yscale("log")
-    ax.text(-0.1, max(times_original)-100, r'\texttt{opening\_dataset:} 0.02', ha='left', va='center', fontsize=9.5, color='black')
-    ax.text(-0.1, max(times_original)-168, r'\texttt{gridding:} 232.06', ha='left', va='center', fontsize=9.5, color='black')
-    ax.text(-0.1, max(times_original)-200, r'\texttt{fourier\_transform:} 0.40', ha='left', va='center', fontsize=9.5, color='black')
-    plt.savefig("v0_original.png")
+    ax.text(-0.21, max(times_v6)-0.1, r'1\ \ \ thread: 2.16', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.21, max(times_v6)-0.3, r'2\ \ threads: 1.68', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.21, max(times_v6)-0.5, r'4\ \ threads: 1.61', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.21, max(times_v6)-0.7, r'8\ \ threads: 1.99', ha='left', va='center', fontsize=10, color='black')
+    ax.text(-0.21, max(times_v6)-0.9, r'16 threads: 3.34', ha='left', va='center', fontsize=10, color='black')
+    plt.savefig("v6.png")
+
+
 
 def get_plot(func, *args):
     plot = funcs_dict.get(func)(*args)
@@ -44,7 +65,8 @@ def get_plot(func, *args):
 
 if __name__ == "__main__":
     funcs_dict = {"original": original,
-                  "v1tov5": v1tov5,}
+                  "v1tov5": v1tov5,
+                  "v6": v6}
     funcs_list = list(funcs_dict.keys())
 
     plot_name = sys.argv[1]
