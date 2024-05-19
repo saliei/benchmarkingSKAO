@@ -21,7 +21,7 @@ def original():
     ax.text(-0.1, max(original_times)-100, r'\texttt{opening\_dataset:} 0.02', ha='left', va='center', fontsize=9.5, color='black')
     ax.text(-0.1, max(original_times)-165, r'\texttt{gridding:} 232.06', ha='left', va='center', fontsize=9.5, color='black')
     ax.text(-0.1, max(original_times)-200, r'\texttt{fourier\_transform:} 0.40', ha='left', va='center', fontsize=9.5, color='black')
-    plt.show()
+    plt.savefig("v0_original.png")
 
 def get_plot(func, *args):
     funcs_dict = {"original": original}
