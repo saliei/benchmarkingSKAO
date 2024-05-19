@@ -1,0 +1,23 @@
+# Compiler and flags
+NVCC = nvcc
+MPICC = mpicc
+CFLAGS = -O3 -Xcompiler -fPIC
+LDFLAGS = -shared
+ARCH = -arch=sm_70
+MPI_INCLUDES = $(shell mpicc --showme:compile)
+MPI_LIBS = $(shell mpicc --showme:link)
+
+# Files
+TARGET = libgrid_cuda.so
+SRC = gridding.cu
+HEADER = gridding.h
+
+# Rules
+all: $(TARGET)
+
+$(TARGET): $(SRC) $(HEADER)
+	$(NVCC) $(ARCH) $(CFLAGS) $(LDFLAGS) -o $@ $< $(MPI_INCLUDES) $(MPI_LIBS)
+
+clean:
+	rm -f $(TARGET)
+
