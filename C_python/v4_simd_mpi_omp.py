@@ -6,10 +6,11 @@ import ctypes
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
+from mpi4py import MPI
 
 image_size = 2048
 image_name = "v4_C.png"
-dataset_path = "./example_simulation.zarr"
+dataset_path = "../example_simulation.zarr"
 
 libgrid = ctypes.CDLL("./libgrid.so")
 
@@ -45,7 +46,7 @@ vist_flat = vist.compute().values.ravel()
 freq_flat = freq.compute().values.ravel()
 
 start_gridding_time = MPI.Wtime()
-libgrid.gridding_mpi_simd(grid_flat, uvwt_flat, vist_flat, freq_flat, start_t, end_t)
+libgrid.gridding_simd_mpi(grid_flat, uvwt_flat, vist_flat, freq_flat)
 end_gridding_time = MPI.Wtime()
 gridding_time = end_gridding_time - start_gridding_time
 print(f"rank: {rank}, gridding time: {gridding_time:10.8f}")
