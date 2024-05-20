@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 
 import time
@@ -33,13 +32,14 @@ rank = comm.Get_rank()
 grid = np.zeros((image_size, image_size), dtype=np.complex128)
 grid_flat = grid.ravel()
 
-chunk_size = len(dataset.time) // size
-start_t = rank * chunk_size
-end_t = (rank + 1) * chunk_size if rank < size - 1 else len(dataset.time)
-
+dataset = open_dataset(dataset_path)
 uvwt = dataset.UVW[start_t:end_t]
 vist = dataset.VISIBILITY[start_t:end_t]
 freq = dataset.frequency
+
+chunk_size = len(dataset.time) // size
+start_t = rank * chunk_size
+end_t = (rank + 1) * chunk_size if rank < size - 1 else len(dataset.time)
 
 uvwt_flat = uvwt.compute().values.ravel()
 vist_flat = vist.compute().values.ravel()
