@@ -41,6 +41,30 @@ def v3():
 
     plt.savefig("v3.png")
 
+def v4():
+    # 16 threads, num mpi
+    v4_nmpi_t16 = ["1", "2", "4", "8"]
+    times_t16 = [0.196, 0.127, 0.131, 0.150]
+
+    # 8 threads, num mpi
+    v4_nmpi_t8 = ["1", "2", "4", "8", "16"]
+    times_t8 = [0.195, 0.127, 0.140, 0.151, 0.312]
+
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10, 4))
+    bars1 = ax1.bar(v4_nmpi_t16, times_t16, width=0.4, edgecolor="black", linewidth=1, color="dimgray")
+    bars2 = ax2.bar(v4_nmpi_t8, times_t8, width=0.4, edgecolor="black", linewidth=1, color="dimgray")
+
+    ax1.set_title(r"\rmfamily{Version 4: SIMD/MPI/OpenMP - 16 Threads}")
+    ax1.set_xlabel(r"\rmfamily{Number of MPI Processes}")
+    ax1.set_ylabel(r"\rmfamily{Time(s)}")
+
+    ax2.set_title(r"\rmfamily{Version 4: SIMD/MPI/OpenMP - 8 Threads}")
+    ax2.set_xlabel(r"\rmfamily{Number of MPI Processes}")
+    ax2.set_ylabel(r"\rmfamily{Time(s)}")
+
+    plt.tight_layout()
+    plt.savefig("v4.png")
+
 
 def get_plot(func, *args):
     plot = funcs_dict.get(func)(*args)
@@ -50,6 +74,7 @@ if __name__ == "__main__":
     funcs_dict = {"v1": v1,
                   "v2": v2,
                   "v3": v3,
+                  "v4": v4
                   }
     funcs_list = list(funcs_dict.keys())
 
